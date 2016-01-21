@@ -1,4 +1,5 @@
 //! SOCKS proxy support for Hyper clients
+#![doc(html_root_url="https://sfackler.github.io/rust-hyper-socks/doc/v0.1.0")]
 #![warn(missing_docs)]
 
 extern crate socks;
