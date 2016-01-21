@@ -1,8 +1,10 @@
 # rust-hyper-socks
 
-SOCKS proxy support for Hyper clients.
+[![Build Status](https://travis-ci.org/sfackler/rust-hyper-socks.svg?branch=master)](https://travis-ci.org/sfackler/rust-hyper-socks)
 
 [Documentation](https://sfackler.github.io/rust-hyper-socks/doc/v0.1.0/hyper_socks)
+
+SOCKS proxy support for Hyper clients.
 
 ## License
 
