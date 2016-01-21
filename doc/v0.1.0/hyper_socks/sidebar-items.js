@@ -1,0 +1,1 @@
+initSidebarItems({"struct":[["Socks4HttpConnector","A connector that will produce proxied HttpStreams."],["Socks4HttpsConnector","A connector that will produce protected, proxied HTTP streams using SSL."]]});
