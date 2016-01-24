@@ -6,7 +6,7 @@ extern crate socks;
 extern crate hyper;
 
 use hyper::net::{NetworkConnector, HttpStream, HttpsStream, Ssl};
-use socks::Socks4Stream;
+use socks::{Socks4Stream, Socks5Stream};
 use std::io;
 use std::net::{SocketAddr, ToSocketAddrs};
 use std::slice;
@@ -22,7 +22,7 @@ impl<'a> ToSocketAddrs for AddrSlice<'a> {
     }
 }
 
-/// A connector that will produce proxied HttpStreams.
+/// A connector that will produce HttpStreams proxied over a SOCKS4 server.
 #[derive(Debug)]
 pub struct Socks4HttpConnector {
     addrs: Vec<SocketAddr>,
@@ -56,7 +56,7 @@ impl NetworkConnector for Socks4HttpConnector {
     }
 }
 
-/// A connector that will produce protected, proxied HTTP streams using SSL.
+/// A connector that will produce HttpsStreams proxied over a SOCKS4 server.
 #[derive(Debug)]
 pub struct Socks4HttpsConnector<S> {
     addrs: Vec<SocketAddr>,
@@ -89,6 +89,76 @@ impl<S: Ssl> NetworkConnector for Socks4HttpsConnector<S> {
         let socket = try!(Socks4Stream::connect(AddrSlice(&self.addrs),
                                                 (host, port),
                                                 &self.userid));
+        let stream = HttpStream(socket.into_inner());
+
+        if scheme == "http" {
+            Ok(HttpsStream::Http(stream))
+        } else {
+            Ok(HttpsStream::Https(try!(self.ssl.wrap_client(stream, host))))
+        }
+    }
+}
+
+/// A connector that will produce HttpStreams proxied over a SOCKS5 server.
+#[derive(Debug)]
+pub struct Socks5HttpConnector {
+    addrs: Vec<SocketAddr>,
+}
+
+impl Socks5HttpConnector {
+    /// Creates a new `Socks4HttpConnector` which will connect to the specified
+    /// proxy with the specified userid.
+    pub fn new<T: ToSocketAddrs>(proxy: T) -> io::Result<Socks5HttpConnector> {
+        Ok(Socks5HttpConnector {
+            addrs: try!(proxy.to_socket_addrs()).collect(),
+        })
+    }
+}
+
+impl NetworkConnector for Socks5HttpConnector {
+    type Stream = HttpStream;
+
+    fn connect(&self, host: &str, port: u16, scheme: &str) -> hyper::Result<HttpStream> {
+        if scheme != "http" {
+            return Err(io::Error::new(io::ErrorKind::InvalidInput, "invalid scheme for HTTP")
+                           .into());
+        }
+
+        let socket = try!(Socks5Stream::connect(AddrSlice(&self.addrs), (host, port)));
+        Ok(HttpStream(socket.into_inner()))
+    }
+}
+
+/// A connector that will produce HttpsStreams proxied over a SOCKS4 server.
+#[derive(Debug)]
+pub struct Socks5HttpsConnector<S> {
+    addrs: Vec<SocketAddr>,
+    ssl: S,
+}
+
+impl<S: Ssl> Socks5HttpsConnector<S> {
+    /// Creates a new `Socks4HttpsConnector` which will connect to the specified
+    /// proxy with the specified userid, and use the provided SSL implementation
+    /// to encrypt the resulting stream.
+    pub fn new<T: ToSocketAddrs>(proxy: T, ssl: S) -> io::Result<Self> {
+        Ok(Socks5HttpsConnector {
+            addrs: try!(proxy.to_socket_addrs()).collect(),
+            ssl: ssl,
+        })
+    }
+}
+
+impl<S: Ssl> NetworkConnector for Socks5HttpsConnector<S> {
+    type Stream = HttpsStream<S::Stream>;
+
+    fn connect(&self, host: &str, port: u16, scheme: &str) -> hyper::Result<Self::Stream> {
+        if scheme != "http" && scheme != "https" {
+            return Err(io::Error::new(io::ErrorKind::InvalidInput, "invalid scheme for HTTPS")
+                           .into());
+        }
+
+        let socket = try!(Socks5Stream::connect(AddrSlice(&self.addrs),
+                                                (host, port)));
         let stream = HttpStream(socket.into_inner());
 
         if scheme == "http" {
@@ -133,6 +203,41 @@ mod test {
     #[test]
     fn google_ssl_https() {
         let connector = Socks4HttpsConnector::new("127.0.0.1:8080", "", Openssl::default())
+                            .unwrap();
+        let client = hyper::Client::with_connector(connector);
+        let mut response = client.get("https://www.google.com").send().unwrap();
+
+        assert!(response.status.is_success());
+        let mut body = vec![];
+        response.read_to_end(&mut body).unwrap();
+    }
+
+    #[test]
+    fn google_v5() {
+        let connector = Socks5HttpConnector::new("127.0.0.1:8080").unwrap();
+        let client = hyper::Client::with_connector(connector);
+        let mut response = client.get("http://www.google.com").send().unwrap();
+
+        assert!(response.status.is_success());
+        let mut body = vec![];
+        response.read_to_end(&mut body).unwrap();
+    }
+
+    #[test]
+    fn google_ssl_http_v5() {
+        let connector = Socks5HttpsConnector::new("127.0.0.1:8080", Openssl::default())
+                            .unwrap();
+        let client = hyper::Client::with_connector(connector);
+        let mut response = client.get("http://www.google.com").send().unwrap();
+
+        assert!(response.status.is_success());
+        let mut body = vec![];
+        response.read_to_end(&mut body).unwrap();
+    }
+
+    #[test]
+    fn google_ssl_https_v5() {
+        let connector = Socks5HttpsConnector::new("127.0.0.1:8080", Openssl::default())
                             .unwrap();
         let client = hyper::Client::with_connector(connector);
         let mut response = client.get("https://www.google.com").send().unwrap();
