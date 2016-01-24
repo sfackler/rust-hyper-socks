@@ -6,7 +6,7 @@ extern crate socks;
 extern crate hyper;
 
 use hyper::net::{NetworkConnector, HttpStream, HttpsStream, Ssl};
-use socks::Socks4Socket;
+use socks::Socks4Stream;
 use std::io;
 use std::net::{SocketAddr, ToSocketAddrs};
 use std::vec;
@@ -49,7 +49,7 @@ impl NetworkConnector for Socks4HttpConnector {
                                       "invalid scheme for HTTP").into());
         }
 
-        let socket = try!(Socks4Socket::connect(&self.addrs, (host, port), &self.userid));
+        let socket = try!(Socks4Stream::connect(&self.addrs, (host, port), &self.userid));
         Ok(HttpStream(socket.into_inner()))
     }
 }
@@ -84,7 +84,7 @@ impl<S: Ssl> NetworkConnector for Socks4HttpsConnector<S> {
                                       "invalid scheme for HTTPS").into());
         }
 
-        let socket = try!(Socks4Socket::connect(&self.addrs, (host, port), &self.userid));
+        let socket = try!(Socks4Stream::connect(&self.addrs, (host, port), &self.userid));
         let stream = HttpStream(socket.into_inner());
 
         if scheme == "http" {

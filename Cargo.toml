@@ -9,7 +9,7 @@ documentation = "https://sfackler.github.io/rust-hyper-socks/doc/v0.1.0/hyper_so
 readme = "README.md"
 
 [dependencies]
-socks = "0.1"
+socks = "0.2"
 hyper = { version = "0.7", default_features = false }
 
 [dev-dependencies]
