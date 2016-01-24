@@ -9,23 +9,23 @@ use hyper::net::{NetworkConnector, HttpStream, HttpsStream, Ssl};
 use socks::Socks4Stream;
 use std::io;
 use std::net::{SocketAddr, ToSocketAddrs};
-use std::vec;
+use std::slice;
+use std::iter;
 
-#[derive(Debug)]
-struct CachedAddrs(Vec<SocketAddr>);
+struct AddrSlice<'a>(&'a [SocketAddr]);
 
-impl ToSocketAddrs for CachedAddrs {
-    type Iter = vec::IntoIter<SocketAddr>;
+impl<'a> ToSocketAddrs for AddrSlice<'a> {
+    type Iter = iter::Cloned<slice::Iter<'a, SocketAddr>>;
 
     fn to_socket_addrs(&self) -> io::Result<Self::Iter> {
-        Ok(self.0.clone().into_iter())
+        Ok(self.0.iter().cloned())
     }
 }
 
 /// A connector that will produce proxied HttpStreams.
 #[derive(Debug)]
 pub struct Socks4HttpConnector {
-    addrs:  CachedAddrs,
+    addrs: Vec<SocketAddr>,
     userid: String,
 }
 
@@ -34,7 +34,7 @@ impl Socks4HttpConnector {
     /// proxy with the specified userid.
     pub fn new<T: ToSocketAddrs>(proxy: T, userid: &str) -> io::Result<Socks4HttpConnector> {
         Ok(Socks4HttpConnector {
-            addrs: CachedAddrs(try!(proxy.to_socket_addrs()).collect()),
+            addrs: try!(proxy.to_socket_addrs()).collect(),
             userid: userid.to_owned(),
         })
     }
@@ -45,11 +45,13 @@ impl NetworkConnector for Socks4HttpConnector {
 
     fn connect(&self, host: &str, port: u16, scheme: &str) -> hyper::Result<HttpStream> {
         if scheme != "http" {
-            return Err(io::Error::new(io::ErrorKind::InvalidInput,
-                                      "invalid scheme for HTTP").into());
+            return Err(io::Error::new(io::ErrorKind::InvalidInput, "invalid scheme for HTTP")
+                           .into());
         }
 
-        let socket = try!(Socks4Stream::connect(&self.addrs, (host, port), &self.userid));
+        let socket = try!(Socks4Stream::connect(AddrSlice(&self.addrs),
+                                                (host, port),
+                                                &self.userid));
         Ok(HttpStream(socket.into_inner()))
     }
 }
@@ -57,7 +59,7 @@ impl NetworkConnector for Socks4HttpConnector {
 /// A connector that will produce protected, proxied HTTP streams using SSL.
 #[derive(Debug)]
 pub struct Socks4HttpsConnector<S> {
-    addrs: CachedAddrs,
+    addrs: Vec<SocketAddr>,
     userid: String,
     ssl: S,
 }
@@ -68,7 +70,7 @@ impl<S: Ssl> Socks4HttpsConnector<S> {
     /// to encrypt the resulting stream.
     pub fn new<T: ToSocketAddrs>(proxy: T, userid: &str, ssl: S) -> io::Result<Self> {
         Ok(Socks4HttpsConnector {
-            addrs: CachedAddrs(try!(proxy.to_socket_addrs()).collect()),
+            addrs: try!(proxy.to_socket_addrs()).collect(),
             userid: userid.to_owned(),
             ssl: ssl,
         })
@@ -80,11 +82,13 @@ impl<S: Ssl> NetworkConnector for Socks4HttpsConnector<S> {
 
     fn connect(&self, host: &str, port: u16, scheme: &str) -> hyper::Result<Self::Stream> {
         if scheme != "http" && scheme != "https" {
-            return Err(io::Error::new(io::ErrorKind::InvalidInput,
-                                      "invalid scheme for HTTPS").into());
+            return Err(io::Error::new(io::ErrorKind::InvalidInput, "invalid scheme for HTTPS")
+                           .into());
         }
 
-        let socket = try!(Socks4Stream::connect(&self.addrs, (host, port), &self.userid));
+        let socket = try!(Socks4Stream::connect(AddrSlice(&self.addrs),
+                                                (host, port),
+                                                &self.userid));
         let stream = HttpStream(socket.into_inner());
 
         if scheme == "http" {
@@ -116,7 +120,8 @@ mod test {
 
     #[test]
     fn google_ssl_http() {
-        let connector = Socks4HttpsConnector::new("127.0.0.1:8080", "", Openssl::default()).unwrap();
+        let connector = Socks4HttpsConnector::new("127.0.0.1:8080", "", Openssl::default())
+                            .unwrap();
         let client = hyper::Client::with_connector(connector);
         let mut response = client.get("http://www.google.com").send().unwrap();
 
@@ -127,7 +132,8 @@ mod test {
 
     #[test]
     fn google_ssl_https() {
-        let connector = Socks4HttpsConnector::new("127.0.0.1:8080", "", Openssl::default()).unwrap();
+        let connector = Socks4HttpsConnector::new("127.0.0.1:8080", "", Openssl::default())
+                            .unwrap();
         let client = hyper::Client::with_connector(connector);
         let mut response = client.get("https://www.google.com").send().unwrap();
 
