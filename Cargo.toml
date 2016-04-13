@@ -10,7 +10,7 @@ readme = "README.md"
 
 [dependencies]
 socks = "0.2"
-hyper = { version = ">= 0.7, < 0.9", default_features = false }
+hyper = { version = ">= 0.7, < 0.9", default_features = false, git = "https://github.com/hyperium/hyper", rev = "80f012321e7371787d22e6237049842274f87331" }
 
 [dev-dependencies]
-hyper = ">= 0.7, < 0.9" # to pick up openssl stuff
+hyper = { version = ">= 0.7, < 0.9", git = "https://github.com/hyperium/hyper", rev = "80f012321e7371787d22e6237049842274f87331"}  # to pick up openssl stuff
