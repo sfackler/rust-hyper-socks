@@ -10,7 +10,7 @@ readme = "README.md"
 
 [dependencies]
 socks = "0.2"
-hyper = { version = "0.7", default_features = false }
+hyper = { version = ">= 0.7, < 0.9", default_features = false }
 
 [dev-dependencies]
-hyper = "0.7" # to pick up openssl stuff
+hyper = ">= 0.7, < 0.9" # to pick up openssl stuff
