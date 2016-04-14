@@ -1,11 +1,11 @@
 //! SOCKS proxy support for Hyper clients
-#![doc(html_root_url="https://sfackler.github.io/rust-hyper-socks/doc/v0.1.2")]
+#![doc(html_root_url="https://sfackler.github.io/rust-hyper-socks/doc/v0.2.0")]
 #![warn(missing_docs)]
 
 extern crate socks;
 extern crate hyper;
 
-use hyper::net::{NetworkConnector, HttpStream, HttpsStream, Ssl};
+use hyper::net::{NetworkConnector, HttpStream, HttpsStream, SslClient};
 use socks::{Socks4Stream, Socks5Stream};
 use std::io;
 use std::net::{SocketAddr, ToSocketAddrs};
@@ -64,7 +64,7 @@ pub struct Socks4HttpsConnector<S> {
     ssl: S,
 }
 
-impl<S: Ssl> Socks4HttpsConnector<S> {
+impl<S: SslClient> Socks4HttpsConnector<S> {
     /// Creates a new `Socks4HttpsConnector` which will connect to the specified
     /// proxy with the specified userid, and use the provided SSL implementation
     /// to encrypt the resulting stream.
@@ -77,7 +77,7 @@ impl<S: Ssl> Socks4HttpsConnector<S> {
     }
 }
 
-impl<S: Ssl> NetworkConnector for Socks4HttpsConnector<S> {
+impl<S: SslClient> NetworkConnector for Socks4HttpsConnector<S> {
     type Stream = HttpsStream<S::Stream>;
 
     fn connect(&self, host: &str, port: u16, scheme: &str) -> hyper::Result<Self::Stream> {
@@ -136,7 +136,7 @@ pub struct Socks5HttpsConnector<S> {
     ssl: S,
 }
 
-impl<S: Ssl> Socks5HttpsConnector<S> {
+impl<S: SslClient> Socks5HttpsConnector<S> {
     /// Creates a new `Socks4HttpsConnector` which will connect to the specified
     /// proxy with the specified userid, and use the provided SSL implementation
     /// to encrypt the resulting stream.
@@ -148,7 +148,7 @@ impl<S: Ssl> Socks5HttpsConnector<S> {
     }
 }
 
-impl<S: Ssl> NetworkConnector for Socks5HttpsConnector<S> {
+impl<S: SslClient> NetworkConnector for Socks5HttpsConnector<S> {
     type Stream = HttpsStream<S::Stream>;
 
     fn connect(&self, host: &str, port: u16, scheme: &str) -> hyper::Result<Self::Stream> {
