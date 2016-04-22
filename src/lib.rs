@@ -1,5 +1,5 @@
 //! SOCKS proxy support for Hyper clients
-#![doc(html_root_url="https://sfackler.github.io/rust-hyper-socks/doc/v0.2.0")]
+#![doc(html_root_url="https://sfackler.github.io/rust-hyper-socks/doc/v0.2.1")]
 #![warn(missing_docs)]
 
 extern crate socks;
@@ -106,7 +106,7 @@ pub struct Socks5HttpConnector {
 }
 
 impl Socks5HttpConnector {
-    /// Creates a new `Socks4HttpConnector` which will connect to the specified
+    /// Creates a new `Socks5HttpConnector` which will connect to the specified
     /// proxy with the specified userid.
     pub fn new<T: ToSocketAddrs>(proxy: T) -> io::Result<Socks5HttpConnector> {
         Ok(Socks5HttpConnector {
@@ -129,7 +129,7 @@ impl NetworkConnector for Socks5HttpConnector {
     }
 }
 
-/// A connector that will produce HttpsStreams proxied over a SOCKS4 server.
+/// A connector that will produce HttpsStreams proxied over a SOCKS5 server.
 #[derive(Debug)]
 pub struct Socks5HttpsConnector<S> {
     addrs: Vec<SocketAddr>,
@@ -137,7 +137,7 @@ pub struct Socks5HttpsConnector<S> {
 }
 
 impl<S: SslClient> Socks5HttpsConnector<S> {
-    /// Creates a new `Socks4HttpsConnector` which will connect to the specified
+    /// Creates a new `Socks5HttpsConnector` which will connect to the specified
     /// proxy with the specified userid, and use the provided SSL implementation
     /// to encrypt the resulting stream.
     pub fn new<T: ToSocketAddrs>(proxy: T, ssl: S) -> io::Result<Self> {
