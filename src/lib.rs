@@ -5,6 +5,9 @@
 extern crate socks;
 extern crate hyper;
 
+#[cfg(test)]
+extern crate hyper_openssl;
+
 use hyper::net::{NetworkConnector, HttpStream, HttpsStream, SslClient};
 use socks::{Socks4Stream, Socks5Stream};
 use std::io;
@@ -155,7 +158,7 @@ impl<S: SslClient> NetworkConnector for Socks5HttpsConnector<S> {
 #[cfg(test)]
 mod test {
     use hyper;
-    use hyper::net::Openssl;
+    use hyper_openssl::OpensslClient;
     use std::io::Read;
 
     use super::*;
@@ -173,8 +176,8 @@ mod test {
 
     #[test]
     fn google_ssl_http() {
-        let connector = Socks4HttpsConnector::new("127.0.0.1:8080", "", Openssl::default())
-                            .unwrap();
+        let ssl = OpensslClient::new().unwrap();
+        let connector = Socks4HttpsConnector::new("127.0.0.1:8080", "", ssl).unwrap();
         let client = hyper::Client::with_connector(connector);
         let mut response = client.get("http://www.google.com").send().unwrap();
 
@@ -185,8 +188,8 @@ mod test {
 
     #[test]
     fn google_ssl_https() {
-        let connector = Socks4HttpsConnector::new("127.0.0.1:8080", "", Openssl::default())
-                            .unwrap();
+        let ssl = OpensslClient::new().unwrap();
+        let connector = Socks4HttpsConnector::new("127.0.0.1:8080", "", ssl).unwrap();
         let client = hyper::Client::with_connector(connector);
         let mut response = client.get("https://www.google.com").send().unwrap();
 
@@ -208,8 +211,8 @@ mod test {
 
     #[test]
     fn google_ssl_http_v5() {
-        let connector = Socks5HttpsConnector::new("127.0.0.1:8080", Openssl::default())
-                            .unwrap();
+        let ssl = OpensslClient::new().unwrap();
+        let connector = Socks5HttpsConnector::new("127.0.0.1:8080", ssl).unwrap();
         let client = hyper::Client::with_connector(connector);
         let mut response = client.get("http://www.google.com").send().unwrap();
 
@@ -220,8 +223,8 @@ mod test {
 
     #[test]
     fn google_ssl_https_v5() {
-        let connector = Socks5HttpsConnector::new("127.0.0.1:8080", Openssl::default())
-                            .unwrap();
+        let ssl = OpensslClient::new().unwrap();
+        let connector = Socks5HttpsConnector::new("127.0.0.1:8080", ssl).unwrap();
         let client = hyper::Client::with_connector(connector);
         let mut response = client.get("https://www.google.com").send().unwrap();
 

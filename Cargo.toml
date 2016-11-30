@@ -13,4 +13,4 @@ socks = "0.2"
 hyper = { version = ">= 0.8.1, < 0.10", default-features = false }
 
 [dev-dependencies]
-hyper = { version = ">= 0.8.1, < 0.10" } # to pick up openssl stuff
+hyper-openssl = "0.1"
