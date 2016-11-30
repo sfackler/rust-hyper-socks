@@ -9,18 +9,6 @@ use hyper::net::{NetworkConnector, HttpStream, HttpsStream, SslClient};
 use socks::{Socks4Stream, Socks5Stream};
 use std::io;
 use std::net::{SocketAddr, ToSocketAddrs};
-use std::slice;
-use std::iter;
-
-struct AddrSlice<'a>(&'a [SocketAddr]);
-
-impl<'a> ToSocketAddrs for AddrSlice<'a> {
-    type Iter = iter::Cloned<slice::Iter<'a, SocketAddr>>;
-
-    fn to_socket_addrs(&self) -> io::Result<Self::Iter> {
-        Ok(self.0.iter().cloned())
-    }
-}
 
 /// A connector that will produce HttpStreams proxied over a SOCKS4 server.
 #[derive(Debug)]
@@ -49,9 +37,7 @@ impl NetworkConnector for Socks4HttpConnector {
                            .into());
         }
 
-        let socket = try!(Socks4Stream::connect(AddrSlice(&self.addrs),
-                                                (host, port),
-                                                &self.userid));
+        let socket = try!(Socks4Stream::connect(&self.addrs[..], (host, port), &self.userid));
         Ok(HttpStream(socket.into_inner()))
     }
 }
@@ -86,9 +72,7 @@ impl<S: SslClient> NetworkConnector for Socks4HttpsConnector<S> {
                            .into());
         }
 
-        let socket = try!(Socks4Stream::connect(AddrSlice(&self.addrs),
-                                                (host, port),
-                                                &self.userid));
+        let socket = try!(Socks4Stream::connect(&self.addrs[..], (host, port), &self.userid));
         let stream = HttpStream(socket.into_inner());
 
         if scheme == "http" {
@@ -124,7 +108,7 @@ impl NetworkConnector for Socks5HttpConnector {
                            .into());
         }
 
-        let socket = try!(Socks5Stream::connect(AddrSlice(&self.addrs), (host, port)));
+        let socket = try!(Socks5Stream::connect(&self.addrs[..], (host, port)));
         Ok(HttpStream(socket.into_inner()))
     }
 }
@@ -157,8 +141,7 @@ impl<S: SslClient> NetworkConnector for Socks5HttpsConnector<S> {
                            .into());
         }
 
-        let socket = try!(Socks5Stream::connect(AddrSlice(&self.addrs),
-                                                (host, port)));
+        let socket = try!(Socks5Stream::connect(&self.addrs[..], (host, port)));
         let stream = HttpStream(socket.into_inner());
 
         if scheme == "http" {
