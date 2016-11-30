@@ -94,7 +94,7 @@ pub struct Socks5HttpConnector {
 
 impl Socks5HttpConnector {
     /// Creates a new `Socks5HttpConnector` which will connect to the specified
-    /// proxy with the specified userid.
+    /// proxy.
     pub fn new<T: ToSocketAddrs>(proxy: T) -> io::Result<Socks5HttpConnector> {
         Ok(Socks5HttpConnector {
             addrs: try!(proxy.to_socket_addrs()).collect(),
@@ -124,9 +124,8 @@ pub struct Socks5HttpsConnector<S> {
 }
 
 impl<S: SslClient> Socks5HttpsConnector<S> {
-    /// Creates a new `Socks5HttpsConnector` which will connect to the specified
-    /// proxy with the specified userid, and use the provided SSL implementation
-    /// to encrypt the resulting stream.
+    /// Creates a new `Socks5HttpsConnector` which will connect to the specified proxy, and use the
+    /// provided SSL implementation to encrypt the resulting stream.
     pub fn new<T: ToSocketAddrs>(proxy: T, ssl: S) -> io::Result<Self> {
         Ok(Socks5HttpsConnector {
             addrs: try!(proxy.to_socket_addrs()).collect(),
