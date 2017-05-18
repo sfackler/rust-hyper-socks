@@ -1,11 +1,11 @@
 [package]
 name = "hyper-socks"
-version = "0.3.0"
+version = "0.4.0"
 authors = ["Steven Fackler <sfackler@gmail.com>"]
 license = "MIT/Apache-2.0"
 description = "SOCKS proxy support for Hyper clients"
 repository = "https://github.com/sfackler/rust-hyper-socks"
-documentation = "https://docs.rs/hyper-socks/0.3.0/hyper_socks"
+documentation = "https://docs.rs/hyper-socks/0.4.0/hyper_socks"
 readme = "README.md"
 
 [dependencies]

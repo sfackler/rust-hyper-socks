@@ -1,5 +1,5 @@
 //! SOCKS proxy support for Hyper clients
-#![doc(html_root_url="https://docs.rs/hyper-socks/0.3.0")]
+#![doc(html_root_url="https://docs.rs/hyper-socks/0.4.0")]
 #![warn(missing_docs)]
 
 extern crate socks;
