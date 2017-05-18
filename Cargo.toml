@@ -9,7 +9,7 @@ documentation = "https://docs.rs/hyper-socks/0.3.0/hyper_socks"
 readme = "README.md"
 
 [dependencies]
-socks = "0.2"
+socks = "0.3"
 hyper = "0.10"
 
 [dev-dependencies]
